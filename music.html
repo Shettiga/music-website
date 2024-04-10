@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Include necessary meta tags and stylesheets -->
+    <style>
+
+         /* Add styles for category navbar */
+         #categoryNav {
+            text-align: center;
+            background-color: #333;
+            padding: 10px 0;
+        }
+
+        #categoryNav button {
+            background-color: transparent;
+            border: none;
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        #categoryNav button:hover {
+            background-color: #555;
+            border-radius: 4px;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #fff;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        #musicList {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .music-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-item:last-child {
+            border-bottom: none;
+        }
+
+        .music-item:hover {
+            background-color: #333;
+        }
+
+        .music-info {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .music-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .music-category {
+            font-size: 14px;
+            color: #888;
+        }
+
+        button {
+            background-color: #1db954;
+            color: #fff;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #169c43;
+        }
+
+        #musicPlayer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #000;
+            padding: 20px;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        #audioPlayer {
+            width: 80%;
+            margin: 10px auto;
+        }
+      .music-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* New styles for music images */
+        .music-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        /* Adjusted styles for music info */
+        .music-info {
+            flex: 1;
+        }
+
+        .music-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .music-category {
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="categoryNav">
+        <a href="index.html#conta"><button>Home</button></a>
+        <button onclick="filterMusic('all')">All</button>
+        <button onclick="filterMusic('hindi')">Hindi</button>
+        <button onclick="filterMusic('english')">English</button>
+        <button onclick="filterMusic('kannada')">Kannada</button>
+    </div>
+    <h1>List of Music</h1>
+
+    <div id="musicList"></div>
+
+    <div id="musicPlayer">
+        <h2>Music Player</h2>
+        <audio controls id="audioPlayer">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <!-- Include Firebase SDK and your Firebase configuration -->
+
+    <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-database.js"></script>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+    apiKey: "AIzaSyCRDHxxkCXyNZ9BdJhDlZKpOkLu2FZHmh8",
+    authDomain: "auth-form-2eb89.firebaseapp.com",
+    databaseURL: "https://auth-form-2eb89-default-rtdb.firebaseio.com",
+    projectId: "auth-form-2eb89",
+    storageBucket: "auth-form-2eb89.appspot.com",
+    messagingSenderId: "532774111499",
+    appId: "1:532774111499:web:de3f1759a2fbf70c27ba0e"
+  };
+        const firebaseApp = firebase.initializeApp(firebaseConfig);
+        const db = firebaseApp.database();
+
+        // Fetch music data from Firebase
+        const musicRef = db.ref('music');
+
+        musicRef.once('value')
+            .then((snapshot) => {
+                const musicList = snapshot.val();
+                displayMusicList(musicList);
+            })
+            .catch((error) => {
+                console.error('Error fetching music:', error);
+            });
+
+            function filterMusic(category) {
+            const musicItems = document.querySelectorAll('.music-item');
+            musicItems.forEach((item) => {
+                const musicCategory = item.getAttribute('data-category');
+                if (category === 'all' || musicCategory === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function displayMusicList(musicList) {
+            const musicListDiv = document.getElementById('musicList');
+            musicListDiv.innerHTML = '';
+
+            Object.keys(musicList).forEach((key) => {
+                const music = musicList[key];
+                const musicItem = document.createElement('div');
+                musicItem.classList.add('music-item');
+                musicItem.setAttribute('data-category', music.category.toLowerCase()); // Assuming categories are lowercase
+                musicItem.innerHTML = `
+                    <img class="music-image" src="${music.imageUrl}" alt="Music Image">
+                    <div class="music-info">
+                        <p class="music-title">${music.title}</p>
+                        <p class="music-category">${music.category}</p>
+                    </div>
+                    <button onclick="playMusic('${music.musicUrl}')">Play</button>
+                `;
+                musicListDiv.appendChild(musicItem);
+            });
+
+            // Show all music initially
+            filterMusic('all');
+        }
+
+        function playMusic(musicUrl) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = musicUrl;
+            audioPlayer.play();
+        }
+    </script>
+</body>
+
+</html>

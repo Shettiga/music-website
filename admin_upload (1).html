@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Page</title>
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.3/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.3/firebase-database.js"></script>
+    <!-- Include your Firebase configuration -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            background-attachment: fixed;
+        }
+
+        #musicList {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .music-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .music-item:last-child {
+            border-bottom: none;
+        }
+
+        .music-item:hover {
+            background-color: #333;
+        }
+
+        .music-info {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .music-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .music-category {
+            font-size: 14px;
+            color: #888;
+        }
+
+
+        .music-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* New styles for music images */
+        .music-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        /* Adjusted styles for music info */
+        .music-info {
+            flex: 1;
+        }
+
+        .music-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        h1 {
+            color: #f8f5f5;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: rgb(255, 255, 255);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        alert {
+            background-color: #f44336;
+            color: white;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        #cat {
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #555;
+            padding: 21px;
+        }
+
+        .delete-checkbox {
+            width: 20px;
+            height: 20px;
+            margin: auto 2%;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Upload Music</h1>
+    <form id="uploadForm">
+        <label for="musicTitle">Music Title:</label>
+        <input type="text" id="musicTitle" name="musicTitle" required>
+
+        <!-- <label for="category">Category:</label>
+        <input type="text" id="category" name="category" required> -->
+
+        <label for="category">Category:</label>
+        <div id="cat">
+            <div>
+                <input type="radio" id="kannada" name="category" value="kannada" required>
+                <label for="kannada">Kannada</label>
+            </div>
+            <div>
+                <input type="radio" id="english" name="category" value="english" required>
+                <label for="english">English</label>
+            </div>
+            <div>
+                <input type="radio" id="hindi" name="category" value="hindi" required>
+                <label for="hindi">Hindi</label>
+            </div>
+        </div>
+
+        <label for="musicFile">Select Music File:</label>
+        <input type="file" id="musicFile" name="musicFile" accept="audio/*" required>
+
+        <label for="imageFile">Select Image File:</label>
+        <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+
+        <div class="progress-bar" id="upload-progress-bar">
+            <div class="progress-bar-fill"></div>
+        </div>
+
+
+        <button type="button" onclick="uploadFile()">Upload</button>
+    </form>
+
+    <div id="musicList"></div>
+
+    </div>
+    <button onclick="deleteSelectedMusic()">Delete Selected</button>
+
+    <script>
+        // Setting up Firebase with our website
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRDHxxkCXyNZ9BdJhDlZKpOkLu2FZHmh8",
+            authDomain: "auth-form-2eb89.firebaseapp.com",
+            databaseURL: "https://auth-form-2eb89-default-rtdb.firebaseio.com",
+            projectId: "auth-form-2eb89",
+            storageBucket: "auth-form-2eb89.appspot.com",
+            messagingSenderId: "532774111499",
+            appId: "1:532774111499:web:de3f1759a2fbf70c27ba0e"
+        };
+
+        const firebaseApp = firebase.initializeApp(firebaseConfig);
+        const db = firebaseApp.database(); // Use Realtime Database instead of Firestore
+
+        function uploadFile() {
+            // Get input values
+            const musicTitle = document.getElementById('musicTitle').value;
+            const categoryElements = document.getElementsByName('category');
+            let category = '';
+
+            // Find the selected category
+            for (const element of categoryElements) {
+                if (element.checked) {
+                    category = element.value;
+                    break;
+                }
+            }
+
+            const musicFile = document.getElementById('musicFile').files[0];
+            const imageFile = document.getElementById('imageFile').files[0];
+
+
+            // Create a unique ID for the files
+            const fileId = Date.now().toString();
+
+            // Get references to Firebase Storage
+            const storageRef = firebase.storage().ref(`music/${category}/${fileId}`);
+
+            // Upload music file to Firebase Storage
+            const musicTask = storageRef.child(`${fileId}.mp3`).put(musicFile);
+
+            // Upload image file to Firebase Storage
+            const imageTask = storageRef.child(`${fileId}.jpg`).put(imageFile);
+
+            // Listen for state changes, errors, and completion of the music upload.
+            musicTask.on(
+                'state_changed',
+                function (snapshot) {
+                    // Update progress bar during the upload
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    document.querySelector('.progress-bar-fill').style.width = progress + '%';
+                },
+                function (error) {
+                    console.error(error.message);
+                    alert('Upload failed. Please try again.');
+                },
+                function () {
+                    // Get download URL for the uploaded music file
+                    musicTask.snapshot.ref.getDownloadURL().then(function (musicUrl) {
+                        // Get download URL for the uploaded image file
+                        imageTask.snapshot.ref.getDownloadURL().then(function (imageUrl) {
+                            // Save metadata to Firebase Realtime Database
+                            db.ref('music/' + fileId).set({
+                                title: musicTitle,
+                                category: category,
+                                musicUrl: musicUrl,
+                                imageUrl: imageUrl,
+                            });
+                            alert('Upload successful!');
+
+                            document.getElementById('musicTitle').value = '';
+                            document.querySelector('input[name="category"]:checked').checked = false;
+                            document.getElementById('musicFile').value = '';
+                            document.getElementById('imageFile').value = '';
+
+                            // Refresh the music list
+                            refreshMusicList();
+                        });
+                    });
+                }
+            );
+        }
+        const musicRef = db.ref('music');
+
+        musicRef.once('value')
+            .then((snapshot) => {
+                const musicList = snapshot.val();
+                displayMusicList(musicList);
+            })
+            .catch((error) => {
+                console.error('Error fetching music:', error);
+            });
+
+        function displayMusicList(musicList) {
+            const musicListDiv = document.getElementById('musicList');
+            musicListDiv.innerHTML = '';
+
+            Object.keys(musicList).forEach((key) => {
+                const music = musicList[key];
+                const musicItem = document.createElement('div');
+                musicItem.classList.add('music-item');
+                musicItem.setAttribute('data-category', music.category.toLowerCase());
+
+                // Add a checkbox to each music item
+                musicItem.innerHTML = `
+                    <input type="checkbox" class="delete-checkbox" data-key="${key}">
+                    <img class="music-image" src="${music.imageUrl}" alt="Music Image">
+                    <div class="music-info" style="margin: auto;">
+                        <p class="music-title">${music.title}</p>
+                        <p class="music-category">${music.category}</p>
+                    </div>
+                `;
+                musicListDiv.appendChild(musicItem);
+
+
+            });
+
+            // Show all music initially
+            filterMusic('all');
+        }
+        function deleteSelectedMusic() {
+            const checkboxes = document.querySelectorAll('.delete-checkbox:checked');
+            checkboxes.forEach((checkbox) => {
+                const key = checkbox.getAttribute('data-key');
+                const deleteRef = db.ref('music/' + key);
+
+                // Listen for state changes, errors, and completion of the delete operation.
+                deleteRef.remove()
+                    .then(() => {
+                        // Successfully deleted
+                        alert('Deletion successful!');
+                    })
+                    .catch((error) => {
+                        // Error deleting
+                        console.error('Error deleting music:', error);
+                        alert('Deletion failed. Please try again.');
+                    });
+            });
+
+            // Clear input fields after successful deletion
+            // checkboxes.forEach((checkbox) => {
+            //     checkbox.checked = false;
+            // });
+
+            // Refresh the music list
+            refreshMusicList();
+        }
+
+        function refreshMusicList() {
+            const musicRef = db.ref('music');
+
+            musicRef.once('value')
+                .then((snapshot) => {
+                    const musicList = snapshot.val();
+                    displayMusicList(musicList);
+                })
+                .catch((error) => {
+                    console.error('Error fetching music:', error);
+                });
+        }
+
+        function displayMusicList(musicList) {
+            const musicListDiv = document.getElementById('musicList');
+            musicListDiv.innerHTML = '';
+
+            Object.keys(musicList).forEach((key) => {
+                const music = musicList[key];
+                const musicItem = document.createElement('div');
+                musicItem.classList.add('music-item');
+                musicItem.setAttribute('data-category', music.category.toLowerCase()); // Assuming categories are lowercase
+                musicItem.innerHTML = `
+                <input type="checkbox" class="delete-checkbox" data-key="${key}">
+                    <img class="music-image" src="${music.imageUrl}" alt="Music Image">
+                    <div class="music-info">
+                        <p class="music-title">${music.title}</p>
+                        <p class="music-category">${music.category}</p>
+                    </div>
+                    <button onclick="playMusic('${music.musicUrl}')">Play</button>
+                `;
+                musicListDiv.appendChild(musicItem);
+            });
+
+            // Show all music initially
+            filterMusic('all');
+        }
+
+    </script>
+</body>
+
+</html>

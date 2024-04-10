@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music Website</title>
+    <link rel="stylesheet" type="text/css" href="S1.css">
+</head>
+
+<body>
+    <header>
+        <img class="logo" src="logo.jpg" alt="My Music Website Logo">
+        <h1>My Music </h1>
+    </header>
+
+    <nav>
+        <a href="#conta">Home</a>
+        <a href="#" onclick="redirectToMusic()">Songs</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a href="admin_upload (1).html" id="adminButton" style="display: none;">Admin Page</a>
+        <a style="align-items: center; translate: -50% ;float: right;margin-top: -10%;" href="#" onclick="logout()"> <img id=""
+                height="30px" width="30px" src="log_out.png"></a>
+    </nav>
+    <div class="container" id="conta">
+        <div class="wrapper">
+            <img src="song2.jpg" height="500" width="1000">
+            <img src="song3.jpg" height="500" width="1000">
+            <img src="song1.jpg" height="500" width="1000">
+        </div>
+    </div>
+    <div class="player" id="catego">
+        <a href="#" onclick="redirectToMusic()" class="mus">
+            <div class="index-category-box">
+                <h3>Music-player</h3>
+            </div>
+        </a>
+    </div>
+    <div id="about" class="abtsec">
+        <h1 style="text-align: center; font-size: 7vh; margin-bottom: 2%;">About Music Player</h1>
+
+        <p>Welcome to the Music Player website! Our platform is dedicated to providing you with an exceptional music
+            listening experience. Whether you're a music enthusiast or just looking to discover new tunes, we've got you
+            covered.</p>
+
+        <h2>Our Mission</h2>
+        <p>At Music Player, our mission is to create a seamless and enjoyable music streaming service. We aim to connect
+            music lovers with their favorite artists and genres while introducing them to new and exciting tracks. We
+            believe in the power of music to inspire, uplift, and bring people together.</p>
+
+        <h2>Features</h2>
+        <p>Explore a variety of features, including:</p>
+        <ul>
+            <li>Extensive music library</li>
+            <li>Custom playlists</li>
+            <li>High-quality audio streaming</li>
+            <li>Personalized recommendations</li>
+            <li>User-friendly interface</li>
+        </ul>
+    </div>
+    <div id="contact" class="cntsec">
+        <h2>Contact Us</h2>
+        <p>If you have any questions, feedback, or suggestions, feel free to reach out to us at <a
+                href="mailto:info@musicplayer.com">info@musicplayer.com</a>.</p>
+    </div>
+    <footer>
+        <p>&copy; 2023 My Music Website. All rights reserved.</p>
+    </footer>
+    <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.3/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRDHxxkCXyNZ9BdJhDlZKpOkLu2FZHmh8",
+            authDomain: "auth-form-2eb89.firebaseapp.com",
+            databaseURL: "https://auth-form-2eb89-default-rtdb.firebaseio.com",
+            projectId: "auth-form-2eb89",
+            storageBucket: "auth-form-2eb89.appspot.com",
+            messagingSenderId: "532774111499",
+            appId: "1:532774111499:web:de3f1759a2fbf70c27ba0e"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        function redirectToMusic() {
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    window.location.href = "music.html";
+                } else {
+                    const confirmation = confirm("You are not logged in. Do you want to sign in?");
+                    if (confirmation) {
+                        window.location.href = "signup.html";
+                    }
+                }
+            });
+        }
+        function logout() {
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    const confirmation = confirm("Are you sure you want to Logout?");
+                    if (confirmation) {
+                        firebase.auth().signOut().then(() => {
+                            // Sign-out successful.
+                            alert("Logout successful!");
+                            window.location.href = "signup.html"; // Redirect to the sign-in page after logout
+                        }).catch((error) => {
+                            // An error happened.
+                            console.error("Logout error:", error);
+                            alert("Logout failed. Please try again.");
+                        });
+                    }
+                }
+                else{
+                        window.location.href = "signup.html";
+                    }
+            });
+        }
+
+        function checkAdminUser() {
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      const uid = user.uid;
+
+      // Retrieve user data from Firestore
+      firebase.database().ref('users/' + uid).once('value')
+                        .then((snapshot) => {
+                            const isAdmin = snapshot.val().isAdmin;
+
+                            if (isAdmin) {
+                                document.getElementById('adminButton').style.display = 'block';
+                            } else {
+                                document.getElementById('adminButton').style.display = 'none';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error getting user data from Realtime Database:", error);
+                        });
+                }
+            });
+}
+
+// Call the function to check admin user on page load
+checkAdminUser();
+
+    </script>
+</body>
+
+</html>
